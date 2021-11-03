@@ -1,5 +1,5 @@
-# trigen
-Trigen is a Python script which uses different combinations of Win32 function calls in generated VBA to execute shellcode.
+# tri-a-gen
+Tri-a-gen is based on [Trigen](https://github.com/karttoon/trigen), it is a Python script which uses different combinations of Win32 function calls in generated VBA to execute shellcode.
 
 Blog post - [17JAN2017 - Abusing native Windows functions for shellcode execution](http://ropgadget.com/posts/abusing_win_functions.html)
 
